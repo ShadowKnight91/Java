@@ -1,0 +1,137 @@
+<script type="text/javascript" language="javascript">
+function initpage(){
+    var cks = document.cookie.split(';')
+    var unameck
+    for(var i=0; i<cks.length;i++){
+        if(cks[i].indexOf('username')!=-1){
+            unameck=cks[i]
+        } else if (cks[i].indexOf('userrole')!=-1){
+            uroleck=cks[i]
+        } else if (cks[i].indexOf('userid')!=-1){
+            uidck=cks[i]
+        }
+    }
+    if(unameck==null){
+        document.getElementById('namerow').style.visibility='hidden'
+    } else {
+        var idx=unameck.indexOf('=')
+        var username=unameck.substring(idx+1)
+        sessionStorage.setItem('username',username)
+        idx=uroleck.indexOf('=')
+        var role=uroleck.substring(idx+1)
+        sessionStorage.setItem('userrole',role)
+        idx=uidck.indexOf('=')
+        var id=uidck.substring(idx+1)
+        sessionStorage.setItem('userid',id)
+        document.location='/knowyourcity/city.html'
+        //document.getElementById('login').style.visibility='hidden'
+        //document.getElementById('citydropdown').style.visibility='visible'
+    }
+}
+
+function doHttpPost(URL,payload){
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = callbackFunction(xmlhttp);
+    xmlhttp.open("POST", URL, false);
+    xmlhttp.setRequestHeader("Content-Type", "application/json");
+    xmlhttp.onreadystatechange = callbackFunction(xmlhttp);
+    xmlhttp.send(payload);
+    if(xmlhttp.responseText!= null && xmlhttp.responseText!=""){
+        var resp = JSON.parse(xmlhttp.responseText)
+        return resp
+    }
+    return null
+}
+
+function send(event)
+{
+    var btntxt=event.innerText
+    if(btntxt=='REGISTER'){
+        var posturl='http://localhost:8090/user'
+        var name=document.getElementById('name').value
+        var email=document.getElementById('email').value
+        var password=document.getElementById('pwd').value
+        var payload='{"name":"'+name+'","email":"'+email+'","password":"'+password+'","role":"User"}'
+        document.getElementById('submitbtn').innerText='LOGIN'
+        document.getElementById('namerow').style.visibility='hidden'
+        var resp=doHttpPost(posturl,payload)
+
+        if(resp==null){
+            document.getElementById('loginmsg').innerText= 'Registration Failed!!!!'
+        } else{
+            document.getElementById('loginmsg').innerText= 'Registration Successful!!!!'
+            document.getElementById('email').innerText = ''
+            document.getElementById('pwd').innerText = ''
+        }
+        return   
+    }
+    var uname,pwd;
+    uname = document.getElementById('email').value;
+    pwd = document.getElementById('pwd').value;
+
+    if(uname == null || pwd==null){
+        document.getElementById('loginmsg').innerText = 'invalid username or password. Please try again'
+    }
+
+    var payload = '{"email": "'+uname+'",    "password": "'+pwd+'"}';
+
+    var URL = "http://localhost:8090/user/login";  //Your URL
+
+    var temp=doHttpPost(URL,payload)
+        
+    if(temp==null) {
+        document.getElementById('loginmsg').innerText = 'Login failed!! Please try again'
+    } else {
+        document.cookie = "username="+temp.name
+        document.cookie = "userrole="+temp.role
+        document.cookie = "userid="+temp.userId
+        sessionStorage.setItem('username',temp.name)
+        sessionStorage.setItem('userrole',temp.role)
+        sessionStorage.setItem('userid',temp.userId)
+        document.location='/knowyourcity/city.html'
+    }
+}
+
+function newuser(){
+    document.getElementById('namerow').style.visibility='visible'
+    document.getElementById('submitbtn').innerText='REGISTER'
+}
+
+function register(){
+    alert('1')
+}
+
+function callbackFunction(xmlhttp) {
+    
+    //alert(xmlhttp.responseXML);
+}
+</script>
+
+
+<html>
+    <body onload="javascript:initpage()">
+<div id='div'>
+    <div style="height: 100px; width:100%; background:black; color:white; text-align:center">
+        <div style="height: 20px;"></div>
+        <h1>KNOW YOUR CITY</h1>
+    </div>
+    
+    <div id='login' style="width:100%; text-align:center">
+        <br>
+        <div style="border: 2px solid silver;">
+            <table align="center">
+                <tr id="namerow"> <td style="padding-top:10px"> Fullname: </td> <td> <input id='name'> </td> </tr> 
+                <tr> <td style="padding-top:10px"> Email: </td> <td> <input id='email'> </td> </tr> 
+                <tr> <td style="padding-top:10px"> Password: </td> <td> <input id='pwd' type="password"> </td> </tr> 
+                <tr id="loginrow"> 
+                <td colspan=2 style="text-align:center; padding-top:10px"> <button id="submitbtn" onclick="javascript:send(this)" type="submit">LOGIN</button> 
+                </td> </tr>
+                <tr> 
+                    <td colspan=2 style="text-align:center; padding-top:10px"> <button onclick="javascript:newuser()" type="submit">NEW USER</button> 
+                </td> </tr>
+            </table> 
+        </div>
+        <div id="loginmsg" style="height: 20px; width:100%; color:red; text-align:center"></div>
+    </div>
+</div></body>
+</html>

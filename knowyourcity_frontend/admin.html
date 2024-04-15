@@ -1,0 +1,264 @@
+<script type="text/javascript" language="javascript">
+    function initpage(){
+    
+        var cks = document.cookie.split(';')
+        var unameck
+        for(var i=0; i<cks.length;i++){
+            if(cks[i].indexOf('username')!=-1){
+                unameck=cks[i]
+                break
+            }
+        }
+        if(unameck==null){
+            document.location='/knowyourcity/index.html'
+        } else {
+            var idx=unameck.indexOf('=')
+            var username=unameck.substring(idx+1)
+            document.getElementById('loginmsg2').innerHTML='Welcome '+username+'!!!'
+            populateCities()    
+        }
+    }
+    
+    function logout(){
+        document.cookie="username=; expires=Thu, 01 Jan 1970 00:00:00 UTC;"
+        document.cookie="userid=; expires=Thu, 01 Jan 1970 00:00:00 UTC;"
+        document.cookie="userrole=; expires=Thu, 01 Jan 1970 00:00:00 UTC;"
+        document.location="/knowyourcity/index.html"
+    }
+
+    function callbackFunction(xmlhttp) {
+        
+    }
+
+    function doHttpGet(URL){
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = callbackFunction(xmlhttp);
+        xmlhttp.open("GET", URL, false);
+        xmlhttp.onreadystatechange = callbackFunction(xmlhttp);
+        xmlhttp.send();
+        var resp = JSON.parse(xmlhttp.responseText)
+    
+        return resp
+    }
+
+    function doHttpPost(URL,payload){
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = callbackFunction(xmlhttp);
+        xmlhttp.open("POST", URL, false);
+        xmlhttp.setRequestHeader("Content-Type", "application/json");
+        xmlhttp.onreadystatechange = callbackFunction(xmlhttp);
+        xmlhttp.send(payload);
+        
+        if(xmlhttp.responseText!= null && xmlhttp.responseText!="" && xmlhttp.responseText.indexOf("Error")==-1){
+            var resp = JSON.parse(xmlhttp.responseText)
+            return resp
+        }
+        return null
+    }
+
+    function populateCities() {
+        URL = "http://localhost:8090/city/list"
+    
+        var select = document.getElementById('citydropdown')
+        var cities = doHttpGet(URL) //JSON.parse(xmlhttp.responseText)
+    
+        for(var i=0;i<cities.length;i++){
+            var opt=document.createElement('option')
+            opt.value = cities[i].cityId
+            opt.innerText = cities[i].name
+            select.appendChild(opt)
+        }
+    }
+
+    function addcity(){
+        var name=document.getElementById('cityname').value
+        var state=document.getElementById('citystate').value
+
+        var payload = '{"name": "'+name+'", "state": "'+state+'"}';
+
+        URL = "http://localhost:8090/city";  //Your URL
+
+        var resp = doHttpPost(URL, payload)
+    
+        if(resp==null) {
+            document.getElementById('citymsg').innerText = 'add city failed!! Please try again'
+        } else {
+            document.getElementById('citymsg').innerText = 'Successful'
+        }
+    }
+
+    function additem(){
+        var name=document.getElementById('name').value
+        var address=document.getElementById('address').value
+        var cityId=document.getElementById('citydropdown').value
+
+        var payload = '{"name": "'+name+'", "address": "'+address+'", "cityId":'+cityId+'}';
+        var type = document.getElementById('itemselect').value
+
+        URL = "http://localhost:8090/" + type;  //Your URL
+
+        var resp = doHttpPost(URL, payload)
+    
+        if(resp==null) {
+            document.getElementById('itemmsg').innerText = 'add '+type+' failed!! Please try again'
+        } else {
+            document.getElementById('itemmsg').innerText = 'Successful'
+        }
+    }
+
+    function addtrans(){
+        var mode=document.getElementById('mode').value
+        var costLevel=document.getElementById('costLevel').value
+
+        var payload = '{"mode": "'+mode+'", "costLevel": "'+costLevel+'"}';
+
+        URL = "http://localhost:8090/Transportation";  //Your URL
+
+        var resp = doHttpPost(URL, payload)
+    
+        if(resp==null) {
+            document.getElementById('transmsg').innerText = 'add transportation mode failed!! Please try again'
+        } else {
+            document.getElementById('transmsg').innerText = 'Successful'
+        }
+    }
+    
+    </script>
+    
+    <html>
+    <body onload="javascript:initpage()"></body>
+    <div id='div'>
+        <div style="height: 100px; width:100%; background:black; color:white; text-align:center">
+            <div style="height: 20px;"></div>
+            <h1>KNOW YOUR CITY</h1>
+        </div>
+        
+        <div> 
+            <table width="100%"> 
+                <tr>
+                    <td width="70%"> 
+                        <div id ="loginmsg2" style="height: 20px; width:100%; background:black; color:white; text-align:center">
+                        </div>  
+                    </td>
+                    <td>
+                        <div style="height: 20px; width:100%; background:black; color:white; text-align:center">
+                            <a id="citydiv" href="/knowyourcity/city.html">CITY PAGE</a>
+                        </div>
+                    </td>
+                    <td>
+                        <div onclick="javascript:logout()" style="height: 20px; width:100%; background:black; color:white; text-align:center; text-decoration:underline">
+                            <div id="logoutdiv">LOGOUT</div> 
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div id="addcity" style="text-align:center; width:100%; border:1px solid blue; border-radius: 10px;">
+            <table align=center style="padding-top: 10px">
+                <tr>
+                    <td style="color: steelblue" colspan="2"> Add a City:</td>
+                    
+                </tr>   
+                <tr>
+                    <td>Name</td>
+                    <td><input id="cityname" type="text" style="width: 200;"></td>
+                </tr>
+                <tr>
+                    <td>State</td>
+                    <td><input id="citystate" type="text" style="width: 200;"></td>
+                </tr>
+
+                <tr>
+                    <td colspan="2">
+                        <div id="citymsg" style="width:100%; color:red; text-align:center"></div>
+                    </td>
+                </tr>
+
+                <tr> 
+                    <td align="center" colspan=2><button type="submit" onclick="javascript:addcity()">ADD CITY</button></td>
+                </tr>
+            </table>
+        </div>
+
+        <br>
+
+        <div id="additem" style="text-align:center; width:100%; border:1px solid green; border-radius: 10px;">
+            <table align=center style="padding-top: 10px">
+                <tr>
+                    <td style="color: rgb(84, 157, 84);" colspan="2"> Add a Hotel/Theatre/Restaurant/Landmark:</td>
+                </tr>  
+                <tr>
+                    <td> Type:</td>
+                    <td> 
+                        <select id="itemselect">
+                            <option value="hotel">
+                                Hotel
+                            </option>
+                            <option value="theatre">
+                                Theatre
+                            </option>
+                            <option value="restaurant">
+                                Restaurant
+                            </option>
+                            <option value="landmark">
+                                Landmark
+                            </option>
+                        </select>
+                    </td>
+                </tr>   
+                <tr>
+                    <td>Name</td>
+                    <td><input id="name" type="text" style="width: 200;"></td>
+                </tr>
+                <tr>
+                    <td>Address</td>
+                    <td><input id="address" type="text" style="width: 200;"></td>
+                </tr>
+                <tr>
+                    <td>City</td>
+                    <td><select id="citydropdown">
+
+                    </select></td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <div id="itemmsg" style="width:100%; color:red; text-align:center"></div>
+                    </td>
+                </tr>
+
+                <tr> 
+                    <td align="center" colspan=2><button type="submit" onclick="javascript:additem()">ADD ITEM</button></td>
+                </tr>
+            </table>
+        </div>
+
+        <br>
+
+        <div id="addtrans" style="text-align:center; width:100%; border:1px solid red; border-radius: 10px;">
+            <table align=center style="padding-top: 10px">
+                <tr>
+                    <td style="color: indianred" colspan="2"> Add a Transportation Mode:</td>
+                </tr>   
+                <tr>
+                    <td>Mode</td>
+                    <td><input id="mode" type="text" style="width: 200;"></td>
+                </tr>
+                <tr>
+                    <td>Cost Level</td>
+                    <td><input id="costLevel" type="text" style="width: 200;"></td>
+                </tr>
+
+                <tr>
+                    <td colspan="2">
+                        <div id="transmsg" style="width:100%; color:red; text-align:center"></div>
+                    </td>
+                </tr>
+
+                <tr> 
+                    <td align="center" colspan=2><button type="submit" onclick="javascript:addtrans()">Add Transportation Mode</button></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    </html>

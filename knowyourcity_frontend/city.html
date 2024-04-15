@@ -1,0 +1,405 @@
+<script type="text/javascript" language="javascript">
+function initpage(){
+
+    document.getElementById('admindiv').style.visibility='hidden    '
+    var uname=sessionStorage.getItem('username')
+    if(uname==null){
+        document.location='/knowyourcity/index.html'
+    } else {
+        var userrole=sessionStorage.getItem('userrole')
+        if(userrole=='Admin'){
+            document.getElementById('admindiv').style.visibility='visible'
+        }
+        document.getElementById('loginmsg2').innerHTML='Welcome '+uname+'!!!'
+        populateCities()    
+        document.getElementById('alldetails').style.visibility='hidden'
+    }
+}
+
+function logout(){
+    document.cookie="username=; expires=Thu, 01 Jan 1970 00:00:00 UTC;"
+    document.cookie="userid=; expires=Thu, 01 Jan 1970 00:00:00 UTC;"
+    document.cookie="userrole=; expires=Thu, 01 Jan 1970 00:00:00 UTC;"
+    document.location="/knowyourcity/index.html"
+}
+
+function doHttpGet(URL){
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = callbackFunction(xmlhttp);
+    xmlhttp.open("GET", URL, false);
+    xmlhttp.onreadystatechange = callbackFunction(xmlhttp);
+    xmlhttp.send();
+    var resp = JSON.parse(xmlhttp.responseText)
+
+    return resp
+}
+
+function doHttpPost(URL,payload){
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = callbackFunction(xmlhttp);
+    xmlhttp.open("POST", URL, false);
+    xmlhttp.setRequestHeader("Content-Type", "application/json");
+    xmlhttp.onreadystatechange = callbackFunction(xmlhttp);
+    xmlhttp.send(payload);
+    if(xmlhttp.responseText!= null && xmlhttp.responseText!=""){
+        var resp = JSON.parse(xmlhttp.responseText)
+        return resp
+    }
+    return null
+}
+
+function doHttpDelete(URL){
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = callbackFunction(xmlhttp);
+    xmlhttp.open("DELETE", URL, false);
+    xmlhttp.setRequestHeader("Content-Type", "application/json");
+    xmlhttp.onreadystatechange = callbackFunction(xmlhttp);
+    xmlhttp.send();
+    var resp = xmlhttp.responseText
+}
+
+function populateCities() {
+    URL = "http://localhost:8090/city/list"
+
+    var select = document.getElementById('citydropdown')
+    var cities = doHttpGet(URL) //JSON.parse(xmlhttp.responseText)
+
+    for(var i=0;i<cities.length;i++){
+        var opt=document.createElement('option')
+        opt.value = cities[i].cityId
+        opt.innerText = cities[i].name
+        select.appendChild(opt)
+    }
+}
+
+function fetchRestaurants() {
+    var cityId=document.getElementById('citydropdown').value
+    
+    URL = "http://localhost:8090/city/data?cityId="+cityId+"&type=restaurants"
+
+    var select = document.getElementById('restaurantlist')
+    var resp = doHttpGet(URL) //JSON.parse(xmlhttp.responseText)
+    var rests = resp.restaurantDtoList
+    var temp='<table>'
+    for(var i=0;i<rests.length;i++){
+        temp=temp+'<tr><td style="border:1px solid black"><table>'
+        temp =  temp + '<tr><td style="font-weight:bold">Id: </td><td>' + rests[i].restaurantId + '</td> <td id="fav-rest-'+rests[i].restaurantId+'" style="visibility:hidden; color:red">&starf;</td> </tr>'
+        temp = temp+ '<tr><td style="font-weight:bold">Name: </td><td>' + rests[i].name + '</td> <td></td> </tr>'
+        temp = temp+ '<tr><td style="font-weight:bold">Address: </td><td>' + rests[i].address + '</td> <td></td> </tr>'
+        temp = temp+ '<tr><td colspan=3> <button id="rest-'+rests[i].restaurantId+'" onclick="javascript:addtofavs(this,1,'+rests[i].restaurantId+')">Add to Favs</button></td> </tr>'
+        temp=temp+'</table></td></tr>'
+    }
+    temp=temp+'</table>'
+    document.getElementById("restaurantlist").innerHTML = temp;
+}
+
+function fetchTheatres() {
+    var cityId=document.getElementById('citydropdown').value
+    
+    URL = "http://localhost:8090/city/data?cityId="+cityId+"&type=theatres"
+
+    var select = document.getElementById('theatrelist')
+    var resp = doHttpGet(URL) //JSON.parse(xmlhttp.responseText)
+    var theatres = resp.theatreDtoList
+
+    var temp='<table>'
+    for(var i=0;i<theatres.length;i++){
+        temp=temp+'<tr><td style="border:1px solid black"><table>'
+        temp =  temp + '<tr><td style="font-weight:bold">Id: </td><td>' + theatres[i].theatreId + '</td><td id="fav-theatre-'+theatres[i].theatreId+'" style="visibility:hidden; color:red">&starf;</td> </tr>'
+        temp = temp+ '<tr><td style="font-weight:bold">Name: </td><td>' + theatres[i].name + '</td> <td></td></tr>'
+        temp = temp+ '<tr><td style="font-weight:bold">Address: </td><td>' + theatres[i].address + '</td><td></td></tr>'
+        temp = temp+ '<tr><td colspan=3> <button id="theatre-'+theatres[i].theatreId+'" onclick="javascript:addtofavs(this,2,'+theatres[i].theatreId+')">Add to Favs</button></td></tr>'
+        temp=temp+'</table></td></tr>'
+    }
+    temp=temp+'</table>'
+    document.getElementById("theatrelist").innerHTML = temp;
+}
+
+function fetchLandmarks() {
+    var cityId=document.getElementById('citydropdown').value
+    
+    URL = "http://localhost:8090/city/data?cityId="+cityId+"&type=landmarks"
+
+    var select = document.getElementById('landmarklist')
+    var resp = doHttpGet(URL) //JSON.parse(xmlhttp.responseText)
+    var landmarks = resp.landmarkDtoList
+
+    var temp='<table>'
+    for(var i=0;i<landmarks.length;i++){
+        temp=temp+'<tr><td style="border:1px solid black"><table>'
+        temp =  temp + '<tr><td style="font-weight:bold">Id: </td><td>' + landmarks[i].landmarkId + '</td><td id="fav-landmark-'+landmarks[i].landmarkId+'" style="visibility:hidden; color:red">&starf;</td> </tr>'
+        temp = temp+ '<tr><td style="font-weight:bold">Name: </td><td>' + landmarks[i].name + '</td> <td></td></tr>'
+        temp = temp+ '<tr><td style="font-weight:bold">Address: </td><td>' + landmarks[i].address + '</td><td></td></tr>'
+        temp = temp+ '<tr><td colspan=3> <button id="landmark-'+landmarks[i].landmarkId+'" onclick="javascript:addtofavs(this,3,'+landmarks[i].landmarkId+')">Add to Favs</button></td></tr>'
+        temp=temp+'</table></td></tr>'
+    }
+    temp=temp+'</table>'
+    document.getElementById("landmarklist").innerHTML = temp;
+}
+
+function fetchHotels() {
+    var cityId=document.getElementById('citydropdown').value
+    
+    URL = "http://localhost:8090/city/data?cityId="+cityId+"&type=hotels"
+
+    var select = document.getElementById('hotellist')
+    var resp = doHttpGet(URL) 
+    var hotels = resp.hotelDtoList
+
+    var temp='<table>'
+    for(var i=0;i<hotels.length;i++){
+        temp=temp+'<tr><td style="border:1px solid black"><table>'
+        temp =  temp + '<tr><td style="font-weight:bold">Id: </td><td>' + hotels[i].hotelId + '</td> <td id="fav-hotel-'+hotels[i].hotelId+'" style="visibility:hidden; color:red">&starf;</td> </tr>'
+        temp = temp+ '<tr><td style="font-weight:bold">Name: </td><td>' + hotels[i].name + '</td><td></td></tr>'
+        temp = temp+ '<tr><td style="font-weight:bold">Address: </td><td>' + hotels[i].address + '</td><td></td></tr>'
+        temp = temp+ '<tr><td colspan=3> <button id="hotel-'+hotels[i].hotelId+'" onclick="javascript:addtofavs(this,4,'+hotels[i].hotelId+')">Add to Favs</button></td></tr>'
+        temp=temp+'</table></td></tr>'
+    }
+    temp=temp+'</table>'
+    document.getElementById("hotellist").innerHTML = temp;
+}
+
+function fetchTransportationModes() {
+    var cityId=document.getElementById('citydropdown').value
+    
+    URL = "http://localhost:8090/city/data?cityId="+cityId+"&type=transportation"
+    
+    var select = document.getElementById('transportationlist')
+    var resp = doHttpGet(URL) //JSON.parse(xmlhttp.responseText)
+    var transportations = resp.transportationModeDtoList
+
+    var temp='<table>'
+    for(var i=0;i<transportations.length;i++){
+        temp=temp+'<tr><td style="border:1px solid black"><table>'
+        temp =  temp + '<tr><td style="font-weight:bold">Id: </td><td>' + transportations[i].transportationModeId + '</td><td id="fav-trans-'+transportations[i].transportationModeId+'" style="visibility:hidden; color:red">&starf;</td> </tr>'
+        temp = temp+ '<tr><td style="font-weight:bold">Mode: </td><td>' + transportations[i].mode + '</td><td></td></tr>'
+        temp = temp+ '<tr><td style="font-weight:bold">Cost Level: </td><td>' + transportations[i].costLevel + '</td><td></td></tr>'
+        temp = temp+ '<tr><td colspan=3> <button id="trans-'+transportations[i].transportationModeId+'" onclick="javascript:addtofavs(this,5,'+transportations[i].transportationModeId+')">Add to Favs</button></td></tr>'
+        temp=temp+'</table></td></tr>'
+    }
+    temp=temp+'</table>'
+    document.getElementById("transportationlist").innerHTML = temp;
+}
+
+function fetchUserFavs(){
+    var cityId=document.getElementById('citydropdown').value
+    var uid=sessionStorage.getItem('userid')
+    URL = "http://localhost:8090/preference/userfav/list?cityId="+cityId+"&userId="+uid
+
+    var resp = doHttpGet(URL) 
+    var hotels = resp.hotelDtoList
+
+    for(var i=0;i<hotels.length;i++){
+        document.getElementById('fav-hotel-'+hotels[i].hotelId).style.visibility='visible'
+        document.getElementById('hotel-'+hotels[i].hotelId).innerText='Remove from Favs'
+    }
+
+    var rests = resp.restaurantDtoList
+
+    for(var i=0;i<rests.length;i++){
+        document.getElementById('fav-rest-'+rests[i].restaurantId).style.visibility='visible'
+        document.getElementById('rest-'+rests[i].restaurantId).innerText='Remove from Favs'
+    }
+
+    var theatres = resp.theatreDtoList
+
+    for(var i=0;i<theatres.length;i++){
+        document.getElementById('fav-theatre-'+theatres[i].theatreId).style.visibility='visible'
+        document.getElementById('theatre-'+theatres[i].theatreId).innerText='Remove from Favs'
+    }
+
+    var landmarks = resp.landmarkDtoList
+
+    for(var i=0;i<landmarks.length;i++){
+        document.getElementById('fav-landmark-'+landmarks[i].landmarkId).style.visibility='visible'
+        document.getElementById('landmark-'+landmarks[i].landmarkId).innerText='Remove from Favs'
+    }
+
+    var transportations = resp.transportationModeDtoList
+
+    for(var i=0;i<transportations.length;i++){
+        document.getElementById('fav-trans-'+transportations[i].transportationModeId).style.visibility='visible'
+        document.getElementById('trans-'+transportations[i].transportationModeId).innerText='Remove from Favs'
+    }
+}
+
+function fetchAllCityDetails(){
+    document.getElementById('alldetails').style.visibility='visible'
+    fetchRestaurants()
+    fetchHotels() 
+    fetchTheatres() 
+    fetchLandmarks() 
+    fetchTransportationModes()
+    fetchUserFavs()
+}
+
+function addtofavs(event,type,id){
+
+    //alert(event)
+    var userid = sessionStorage.getItem('userid')
+    var payload = ''
+    var URL = ''
+    var URL_DEL = ''
+    var buttontext=document.getElementById(event.id).innerText
+    var tdId=''
+    
+    if(buttontext.indexOf('Add')!=-1){
+        if(type==1){
+            payload = '{"restaurantId":'+id+',"userId":'+userid+'}'
+            URL = 'http://localhost:8090/preference/userRestaurant'
+            tdId='fav-rest-'+id
+        } else if(type==2){
+            payload = '{"theatreId":'+id+',"userId":'+userid+'}'
+            URL = 'http://localhost:8090/preference/userTheatre'
+            tdId='fav-theatre-'+id
+        } else if(type==3){
+            payload = '{"landmarkId":'+id+',"userId":'+userid+'}'
+            URL = 'http://localhost:8090/preference/userLandmark'
+            tdId='fav-landmark-'+id
+        } else if(type==4){
+            payload = '{"hotelId":'+id+',"userId":'+userid+'}'
+            URL = 'http://localhost:8090/preference/userHotel'
+            tdId='fav-hotel-'+id
+        } else if(type==5){
+            payload = '{"transportationId":'+id+',"userId":'+userid+'}'
+            URL = 'http://localhost:8090/preference/userTransportation'
+            tdId='fav-trans-'+id
+        } 
+        
+        var resp = doHttpPost(URL,payload)
+        document.getElementById(tdId).style.visibility='visible'
+        document.getElementById(event.id).innerText = 'Remove from Favs'
+    } else {
+        if(type==1){
+            URL = 'http://localhost:8090/preference/userRestaurant'
+            URL_DEL = URL+'/'+userid+'/'+id
+            tdId='fav-rest-'+id
+        } else if(type==2){
+            URL = 'http://localhost:8090/preference/userTheatre'
+            URL_DEL = URL+'/'+userid+'/'+id
+            tdId='fav-theatre-'+id
+        } else if(type==3){
+            URL = 'http://localhost:8090/preference/userLandmark'
+            URL_DEL = URL+'/'+userid+'/'+id
+            tdId='fav-landmark-'+id
+        } else if(type==4){
+            URL = 'http://localhost:8090/preference/userHotel'
+            URL_DEL = URL+'/'+userid+'/'+id
+            tdId='fav-hotel-'+id
+        } else if(type==5){
+            URL = 'http://localhost:8090/preference/userTransportation'
+            URL_DEL = URL+'/'+userid+'/'+id
+            tdId='fav-trans-'+id
+        }
+        doHttpDelete(URL_DEL)
+        document.getElementById(tdId).style.visibility='hidden'
+        document.getElementById(event.id).innerText = 'Add to Favs'
+    }
+
+}
+function gotocity() {
+    var cityId=document.getElementById('citydropdown').value
+    URL = "http://localhost:8090/city/details?cityId="+cityId
+
+    var citysummary = document.getElementById('citysummary')
+    var summary = doHttpGet(URL) //JSON.parse(xmlhttp.responseText)
+    var temp = '<table align=center>'
+    temp = temp + '<tr> <td>' + 'City: </td> <td>'+summary.name+'</td></tr>'
+    temp = temp + '<tr> <td>' + 'State: </td><td>'+summary.state+'</td></tr>'
+    temp = temp + "<tr> <td>" + 'Restaurants: </td><td>'+summary.restaurantCount+'</td></tr>'
+    temp = temp + "<tr> <td>" + 'Hotels: </td><td>'+summary.hotelCount+'</td></tr>'
+    temp = temp + "<tr> <td>" + 'Theatres: </td><td>'+summary.theatreCount+'</td></tr>'
+    temp = temp + "<tr> <td>" + 'Landmarks: </td><td>'+summary.landmarkCount+'</td></tr>'
+    temp = temp + "<tr> <td>" + 'Transportation modes: </td><td>'+summary.transportationModeCount+'</td></tr>'
+    temp = temp + "<tr> <td colspan=2 style='padding-top:10px; text-align:center'> <button onclick='fetchAllCityDetails()'> City Details </button></td><td style='padding-top:10px'> </td></tr>"
+    temp=temp + '</table>'
+    citysummary.innerHTML = temp
+
+}
+
+function callbackFunction(xmlhttp) {
+    
+}
+</script>
+
+<html>
+<body onload="javascript:initpage()"></body>
+<div id='div'>
+    <div style="height: 100px; width:100%; background:black; color:white; text-align:center">
+        <div style="height: 20px;"></div>
+        <h1>KNOW YOUR CITY</h1>
+    </div>
+    <div> 
+        <table width="100%"> 
+            <tr>
+                <td width="70%">   
+                    <div id="loginmsg2" style="height: 20px; width:100%; background:black; color:white; text-align:center"></div>
+                </td>
+                <td>
+                    <div style="height: 20px; width:100%; background:black; color:white; text-align:center">
+                        <a id="admindiv" href="/knowyourcity/admin.html">ADMIN PAGE</a>
+                    </div>
+                </td>
+                <td>
+                    <div onclick="javascript:logout()" style="height: 20px; width:100%; background:black; color:white; text-align:center; text-decoration:underline">
+                        <div id="logoutdiv">LOGOUT</div> 
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="selectcity" style="text-align:center; width:100%">
+        <table align=center style="padding-top: 10px">
+            <tr>
+                <td> Select a city:</td>
+                <td><select id="citydropdown"></select></td>
+            </tr>   
+            <tr> 
+                <td align="center" colspan=2><button type="submit" onclick="javascript:gotocity()">GO</button></td>
+            </tr>
+        </table>
+    </div>
+    <div id="citysummary" style="border:1px solid steelblue"></div>
+    <div id="alldetails"> 
+        <table> 
+            <tr>
+                <td valign="top" style="border: 1px solid grey">
+                    <table>
+                        <tr> <td style="background-color: cornflowerblue;"> Restaurants </td> </tr>
+                        <tr> <td> <div id="restaurantlist"> </div> </td> </tr>
+                    </table>
+                </td>
+                <td valign="top" style="border: 1px solid grey">
+                    <table>
+                        <tr> <td style="background-color:indianred;"> Hotels </td> </tr>
+                        <tr> <td> <div id="hotellist"></div> </td> </tr>
+                    </table>
+                    
+                </td>
+                <td valign="top" style="border: 1px solid grey">
+                    <table>
+                        <tr> <td style="background-color: cadetblue;"> Theatres</td> </tr>
+                        <tr> <td> <div id="theatrelist"></div> </td> </tr>
+                    </table>
+                    
+                </td>
+                <td valign="top" style="border: 1px solid grey">
+                    <table>
+                        <tr> <td style="background-color:goldenrod"> Landmarks </td> </tr>
+                        <tr> <td> <div id="landmarklist"></div> </td> </tr>
+                    </table>
+                    
+                </td>
+                <td valign="top" style="border: 1px solid grey">
+                    <table>
+                        <tr> <td style="background-color:aquamarine"> Transportations</td> </tr>
+                        <tr> <td> <div id="transportationlist"></div> </td> </tr>
+                    </table>
+                    
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+</html>
