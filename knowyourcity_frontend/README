@@ -1,1 +1,1 @@
-You have to install apache tomcat and place the folder in webapps folder. Otherwise it won't work
+You have to install apache tomcat and place the frontend folder in webapps folder. Otherwise it won't work
